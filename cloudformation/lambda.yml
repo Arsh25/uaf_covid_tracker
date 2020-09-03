@@ -1,0 +1,48 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Stack to create a Lambda function, IAM roles and cloudwatch logs for scraping the UAF COVID19 dashboard
+
+Resources: 
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          Action: sts:AssumeRole
+          Principal:
+            Service: lambda.amazonaws.com
+          Effect: Allow
+      Policies:
+        - PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*"
+              - Effect: Allow
+                Action:
+                  - dynamodb:PutItem
+                  - dynamodb:Query
+                  - dynamodb:GetItem
+                  - dynamodb:CreateTable
+                  - dynamodb:ListTables
+                Resource:
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*" 
+                  - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/*"
+          PolicyName: policy
+    
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code: ../src/
+      Handler: lambda_handler.handler
+      Role: !GetAtt LambdaRole.Arn
+      Runtime: python3.8
+
+  LambdaLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub "/aws/lambda/${Lambda}"
+      RetentionInDays: 90
