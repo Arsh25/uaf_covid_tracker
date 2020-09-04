@@ -14,6 +14,7 @@ if __name__ == '__main__':
     data = parse_html(get_raw_html('https://sites.google.com/alaska.edu/coronavirus/uaf/dashboard'))
     if data is not None:
         dynamo_helpers.add_case_count(resource, data['cumulative_cases'])
+        print(data)
     cases_table = resource.Table('UAF_cases')
     print(cases_table.get_item(Key={'timestamp':'2020-09-01'}))
 
